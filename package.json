@@ -1,0 +1,20 @@
+{
+  "name": "bikefit-saas-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Enterprise multi-tenant bicycle fitting and AI sizing platform",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspace @bikefit/api",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  }
+}

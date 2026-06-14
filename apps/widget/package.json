@@ -1,0 +1,28 @@
+{
+  "name": "@bikefit/widget",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "lint": "tsc --noEmit -p tsconfig.json",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.2.0",
+    "@react-three/fiber": "^9.1.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "three": "^0.177.0",
+    "zod": "^4.0.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^4.6.0",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  }
+}

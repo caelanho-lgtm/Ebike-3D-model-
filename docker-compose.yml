@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bikefit
+      POSTGRES_PASSWORD: bikefit
+      POSTGRES_DB: bikefit
+    ports:
+      - "5432:5432"
+    volumes:
+      - bikefit-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bikefit -d bikefit"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      DATABASE_URL: postgresql://bikefit:bikefit@postgres:5432/bikefit?schema=public
+      JWT_SECRET: replace-with-long-random-secret
+      CORS_ORIGIN: http://localhost:4173
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  widget:
+    build:
+      context: .
+      dockerfile: apps/widget/Dockerfile
+    ports:
+      - "4173:4173"
+    depends_on:
+      - api
+
+volumes:
+  bikefit-postgres:
