@@ -122,7 +122,7 @@ function scoreFrame(profile: RiderProfile, bike: BikeModel, frame: FrameSize): F
   const intent =
     bike.category === profile.category
       ? 100
-      : bike.category === "ebike" && profile.category === "commute"
+      : bike.category === "ebike" && profile.intent === "commute"
         ? 88
         : 62;
 
