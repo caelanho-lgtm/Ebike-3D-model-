@@ -1,0 +1,36 @@
+{
+  "name": "fitwerx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "FitWerx — multi-tenant SaaS platform for bicycle fitting, 3D visualization, and AI-driven bike sizing.",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev": "npm run dev --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "clean": "npm run clean --workspaces --if-present",
+    "build:engine": "npm run build -w @fitwerx/fit-engine",
+    "build:shared": "npm run build -w @fitwerx/shared",
+    "test:engine": "npm run test -w @fitwerx/fit-engine",
+    "api:dev": "npm run dev -w @fitwerx/api",
+    "api:migrate": "npm run migrate -w @fitwerx/api",
+    "api:seed": "npm run seed -w @fitwerx/api",
+    "web:dev": "npm run dev -w @fitwerx/web",
+    "widget:dev": "npm run dev -w @fitwerx/widget"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
