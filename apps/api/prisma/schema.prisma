@@ -1,0 +1,124 @@
+// FitWerx data model.
+//
+// Multi-tenancy strategy: shared schema with a `tenantId` foreign key on every
+// tenant-scoped table. Isolation is enforced in the application layer — every
+// query is filtered by the authenticated tenant (see src/plugins/auth.ts and
+// src/repositories). JSON payloads are stored as TEXT for portability across
+// SQLite (dev) and PostgreSQL (prod); switch `provider` + DATABASE_URL to move.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  primaryColor String   @default("#0EA5E9")
+  logoUrl      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  users      User[]
+  apiKeys    ApiKey[]
+  bikeModels BikeModel[]
+  sessions   FitSession[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  name         String
+  role         String   @default("fitter") // viewer | fitter | admin | owner
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions FitSession[]
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+}
+
+model ApiKey {
+  id         String    @id @default(cuid())
+  tenantId   String
+  name       String
+  prefix     String    @unique // public, non-secret lookup prefix
+  keyHash    String // sha-256 of the full secret key
+  createdAt  DateTime  @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model BikeModel {
+  id          String   @id @default(cuid())
+  tenantId    String
+  brand       String
+  name        String
+  discipline  String
+  description String?
+  msrpCents   Int?
+  imageUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sizes  FrameSize[]
+
+  @@index([tenantId])
+  @@index([tenantId, discipline])
+}
+
+model FrameSize {
+  id              String  @id @default(cuid())
+  bikeModelId     String
+  sizeLabel       String
+  stack           Float
+  reach           Float
+  seatTubeAngle   Float
+  headTubeAngle   Float
+  headTubeLength  Float?
+  topTube         Float?
+  standover       Float?
+  wheelbase       Float?
+  stockCrankLength Float?
+  riderHeightMin  Float?
+  riderHeightMax  Float?
+
+  bikeModel BikeModel @relation(fields: [bikeModelId], references: [id], onDelete: Cascade)
+
+  @@index([bikeModelId])
+}
+
+model FitSession {
+  id                  String   @id @default(cuid())
+  tenantId            String
+  source              String   @default("dashboard") // dashboard | widget
+  customerName        String?
+  customerEmail       String?
+  riderInputJson      String // serialized RiderInputDto
+  fitJson             String // serialized FitCoordinatesDto
+  recommendationsJson String // serialized ModelRecommendationDto[]
+  estimatedFields     String   @default("[]")
+  createdByUserId     String?
+  createdAt           DateTime @default(now())
+
+  tenant      Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   User?  @relation(fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
+}
