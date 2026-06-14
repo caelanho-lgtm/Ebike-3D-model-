@@ -63,18 +63,16 @@ function Group({ title, defs }: { title: string; defs: SliderDef[] }) {
 
 export function FitControls() {
   const resetFit = useFitStore((s) => s.resetFit);
-  const ui = useFitStore((s) => s.ui);
-  const setUi = useFitStore((s) => s.setUi);
-  const sex = useFitStore((s) => s.rider.sex);
-  const setRider = useFitStore((s) => s.setRider);
 
   return (
-    <div className="panel p-4">
+    <div>
       <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-bold">Fit adjustments</h3>
+        <p className="text-xs text-slate-400">
+          Fine-tune the position the auto-fit chose. Most riders never need to.
+        </p>
         <button
           onClick={resetFit}
-          className="rounded-md border border-edge px-2 py-1 text-xs text-slate-300 hover:bg-panel2"
+          className="shrink-0 rounded-md border border-edge px-2 py-1 text-xs text-slate-300 hover:bg-panel2"
         >
           Reset
         </button>
@@ -83,36 +81,6 @@ export function FitControls() {
       <Group title="Saddle" defs={SADDLE} />
       <Group title="Handlebar" defs={BAR} />
       <Group title="Stem & cranks" defs={STEM} />
-
-      <div className="mt-2 border-t border-edge pt-3">
-        <h4 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Hologram</h4>
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          <button
-            onClick={() => setRider({ sex: 'male' })}
-            className={`rounded-md border px-2 py-1.5 ${sex === 'male' ? 'border-holo bg-holo/10 text-holo' : 'border-edge text-slate-300'}`}
-          >
-            Male
-          </button>
-          <button
-            onClick={() => setRider({ sex: 'female' })}
-            className={`rounded-md border px-2 py-1.5 ${sex === 'female' ? 'border-holo bg-holo/10 text-holo' : 'border-edge text-slate-300'}`}
-          >
-            Female
-          </button>
-        </div>
-        <label className="mt-3 flex items-center justify-between text-xs text-slate-300">
-          Show rider
-          <input type="checkbox" checked={ui.showRider} onChange={(e) => setUi({ showRider: e.target.checked })} />
-        </label>
-        <label className="mt-2 flex items-center justify-between text-xs text-slate-300">
-          Wireframe overlay
-          <input type="checkbox" checked={ui.wireframe} onChange={(e) => setUi({ wireframe: e.target.checked })} />
-        </label>
-        <label className="mt-2 flex items-center justify-between text-xs text-slate-300">
-          Auto-rotate
-          <input type="checkbox" checked={ui.autoRotate} onChange={(e) => setUi({ autoRotate: e.target.checked })} />
-        </label>
-      </div>
     </div>
   );
 }
