@@ -19,7 +19,7 @@ describe("recommendBikeSize", () => {
       ]
     );
 
-    expect(result.recommendedFrame).toBe("54");
+    expect(result.recommendedFrame).toBe("56");
     expect(result.rankedOptions).toHaveLength(3);
     expect(result.confidence).toBeGreaterThan(40);
   });

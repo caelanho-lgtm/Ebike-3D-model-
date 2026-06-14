@@ -3,6 +3,7 @@ import cors from "@fastify/cors";
 import helmet from "@fastify/helmet";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
+import { Prisma } from "@prisma/client";
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
 import { recommendBikeSize } from "@bikefit/ai-engine";
@@ -206,8 +207,8 @@ export async function createServer(config: AppConfig = getConfig()): Promise<Fas
       data: {
         tenantId: request.authTenantId!,
         bikeModelId: bike.id,
-        riderProfileJson: payload.riderProfile,
-        recommendationJson: recommendation,
+        riderProfileJson: payload.riderProfile as Prisma.InputJsonValue,
+        recommendationJson: recommendation as unknown as Prisma.InputJsonValue,
         source: "dashboard"
       }
     });
@@ -251,8 +252,8 @@ export async function createServer(config: AppConfig = getConfig()): Promise<Fas
       data: {
         tenantId: request.authTenantId!,
         bikeModelId: bike.id,
-        riderProfileJson: payload.riderProfile,
-        recommendationJson: recommendation,
+        riderProfileJson: payload.riderProfile as Prisma.InputJsonValue,
+        recommendationJson: recommendation as unknown as Prisma.InputJsonValue,
         source: "embed"
       }
     });

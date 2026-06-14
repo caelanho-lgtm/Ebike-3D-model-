@@ -3,11 +3,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "prebuild": "npm run build --workspace @bikefit/ai-engine && prisma generate",
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit -p tsconfig.json",
+    "pretypecheck": "npm run build --workspace @bikefit/ai-engine && prisma generate",
     "typecheck": "tsc --noEmit -p tsconfig.json",
+    "pretest": "npm run build --workspace @bikefit/ai-engine && prisma generate",
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy"

@@ -59,6 +59,7 @@ model BikeModel {
   isActive       Boolean  @default(true)
   createdAt      DateTime @default(now())
   tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  fitSessions    FitSession[]
 
   @@index([tenantId, discipline])
 }
