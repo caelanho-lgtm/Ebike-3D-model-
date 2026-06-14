@@ -2,9 +2,32 @@
  * @dtf/geometry — CanonicalBike types, geometry-chart ingest/normalization,
  * and validators. See CLAUDE.md (principle 3) and docs/blueprint.md §1.
  *
- * SCAFFOLD: types are placeholders. The real CanonicalBike (BB-anchored, SI
- * units) and the normalizer land in the Geometry-core slice.
+ * Everything here is pure and framework-free. Charts (mm/deg) are validated and
+ * normalized into BB-anchored SI `CanonicalBike` records; nothing downstream
+ * sees vendor formats or display units.
  */
 
-/** Identifies the package; replaced by real exports in the Geometry slice. */
-export const GEOMETRY_PACKAGE = '@dtf/geometry' as const;
+export type {
+  Vec2,
+  GeometryChart,
+  BikePoints,
+  CanonicalBike,
+  ValidationIssue,
+} from './types.js';
+
+export { mmToMetres, metresToMm, degToRad, radToDeg } from './units.js';
+
+export {
+  validateGeometryChart,
+  assertValidGeometryChart,
+  GeometryValidationError,
+} from './validate.js';
+
+export { normalizeGeometryChart, slugify } from './normalize.js';
+
+export {
+  NORCO_SIGHT_VLT,
+  SPECIALIZED_TARMAC_SL7,
+  CANYON_GRAIL,
+  REAL_BIKE_CHARTS,
+} from './fixtures.js';
