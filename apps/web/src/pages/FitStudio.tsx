@@ -6,6 +6,7 @@ import type {
 } from '@fitwerx/shared';
 import { api, ApiClientError } from '../api/client';
 import { BikeViewer } from '../components/BikeViewer';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const DISCIPLINES: { value: Discipline; label: string }[] = [
   { value: 'road_race', label: 'Road — Race' },
@@ -248,7 +249,15 @@ export function FitStudioPage() {
           <div className="grid cols-2">
             <div className="card" style={{ padding: 0 }}>
               <div className="viewer">
-                <BikeViewer geometry={selectedGeometry} fit={result.fit} />
+                <ErrorBoundary
+                  fallback={
+                    <div className="loading" style={{ paddingTop: 200 }}>
+                      3D preview unavailable in this browser (WebGL required).
+                    </div>
+                  }
+                >
+                  <BikeViewer geometry={selectedGeometry} fit={result.fit} />
+                </ErrorBoundary>
               </div>
               <div style={{ padding: 16 }}>
                 <div className="flex-between">
