@@ -1,0 +1,48 @@
+# FitWerx local stack. Build images from the repository root.
+#
+#   docker compose up --build
+#
+# The API uses SQLite by default (persisted in the api-data volume). To run on
+# PostgreSQL, set provider="postgresql" in apps/api/prisma/schema.prisma, point
+# DATABASE_URL at the db service below, and uncomment the `db` service + depends_on.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: "file:/data/fitwerx.db"
+      JWT_SECRET: "${JWT_SECRET:-please-override-with-a-long-random-secret-0001}"
+      CORS_ORIGINS: "*"
+      PORT: "4000"
+    volumes:
+      - api-data:/data
+    ports:
+      - "4000:4000"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      - api
+    ports:
+      - "8080:80"
+
+  # Optional PostgreSQL for production-style deployments.
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: fitwerx
+  #     POSTGRES_PASSWORD: fitwerx
+  #     POSTGRES_DB: fitwerx
+  #   volumes:
+  #     - db-data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+volumes:
+  api-data:
+  # db-data:
