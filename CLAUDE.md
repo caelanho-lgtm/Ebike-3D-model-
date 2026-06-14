@@ -16,7 +16,18 @@ packages/shared       Zod contracts/DTOs + unit conversion. Source of truth for 
 apps/api              Fastify 5 + Prisma 5 multi-tenant REST API (SQLite dev / PostgreSQL-ready).
 apps/web              React 18 + Vite 6 dashboard; react-three-fiber 3D viewer.
 apps/widget           Vanilla-TS, Shadow-DOM embeddable widget; Vite IIFE library build (~12 KB).
+apps/digital-twin     Next.js 14 App Router "Bike Fit Digital Twin": 3D holographic rider,
+                      interactive fit, size compare, AI coach, Zustand, Tailwind, Prisma (Postgres).
 ```
+
+`apps/digital-twin` is self-contained (it does NOT import the other workspace
+packages). Its own structure: `app/` (routes + `app/api/*` handlers),
+`components/` (R3F + UI), `lib/` (`geometry`, `fitEngine`, `ai`, `store`),
+`server/` (`db.ts` + `api/*` data logic), `prisma/`. Its Prisma client uses a
+custom output (`prisma/generated/client`) so it never collides with the API's
+SQLite client. 3D renders procedurally by default (no GLB binaries committed);
+drop a GLB into `public/models/` and pass `glbUrl` to use real assets. Run
+`prisma generate` (via `prebuild`) before `next build`.
 
 Dependency direction: `fit-engine` ← `shared` ← (`api`, `web`, `widget`).
 Always build `fit-engine` and `shared` before the apps consume them.

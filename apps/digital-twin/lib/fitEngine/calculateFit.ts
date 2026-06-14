@@ -124,8 +124,12 @@ function jointAngle(a: Point, b: Point, c: Point): number {
 /** Estimate leg/torso/arm segments (mm) from height + inseam. */
 export function resolveSegments(r: RiderAnthropometrics) {
   const inseam = r.inseam ?? r.height * 0.47;
-  const femur = inseam * 0.5;
-  const lowerLeg = inseam * 0.5 + r.height * 0.05; // tibia + ankle→pedal allowance
+  // Functional leg length = hip joint (greater trochanter) to pedal through the
+  // ankle. Trochanteric height ≈ 0.53·stature ≈ 1.13·inseam, which is what
+  // governs knee extension at the bottom of the stroke (not inseam alone).
+  const legLength = r.inseam ? r.inseam * 1.13 : r.height * 0.53;
+  const femur = legLength * 0.46;
+  const lowerLeg = legLength * 0.54;
   const torso = r.torsoLength ?? r.height * 0.3;
   const arm = r.armLength ?? r.height * 0.44;
   return { inseam, femur, lowerLeg, torso, arm };
@@ -199,19 +203,35 @@ export function calculateFit(rider: RiderAnthropometrics, p: FitParameters): Fit
   const ankleTop: Point = { x: 0, y: p.crankLength };
   const kneeTop = circleIntersect(hip, seg.femur, ankleTop, seg.lowerLeg, 1).point;
 
-  // --- Torso + arm linkage (shoulder solve) ---
-  const shoulderSol = circleIntersect(hip, seg.torso, hand, seg.arm, 1);
-  const shoulder = shoulderSol.point;
+  // --- Torso + arm linkage ---
+  // The arm bends at the elbow, so a rigid two-segment IK chain is under-
+  // determined and degenerates to an unrealistically upright torso when the
+  // torso length is close to the hip→hand distance. Instead we use a calibrated
+  // torso-pitch model on saddle-to-bar drop and reach — the approach used by
+  // production consumer fit tools — which is monotonic and well-behaved:
+  //   more drop  → flatter (more aggressive) back,
+  //   more reach → flatter back.
+  const drop = hip.y - hand.y; // + = bars below saddle
+  const run = hand.x - hip.x; // horizontal saddle → bar
+  const backAngle = clamp(
+    Math.round(50 - 0.08 * (drop - 60) - 0.015 * (run - 430)),
+    25,
+    68,
+  );
+
+  const shoulder: Point = {
+    x: hip.x + seg.torso * Math.cos((backAngle * Math.PI) / 180),
+    y: hip.y + seg.torso * Math.sin((backAngle * Math.PI) / 180),
+  };
   const head: Point = {
-    x: shoulder.x + seg.torso * 0.16,
-    y: shoulder.y + seg.torso * 0.28,
+    x: shoulder.x + seg.torso * 0.18,
+    y: shoulder.y + seg.torso * 0.26,
   };
 
-  // --- Angles ---
-  const backVec = { x: shoulder.x - hip.x, y: shoulder.y - hip.y };
-  const backAngle = Math.round(Math.abs(toDeg(Math.atan2(backVec.y, backVec.x))));
+  // Over-stretched if even a straight arm + torso cannot span hip → bar.
+  const shoulderReachable = dist(hip, hand) <= seg.torso + seg.arm;
   const hipAngle = Math.round(jointAngle(shoulder, hip, kneeTop));
-  const reach = Math.round(hand.x - hip.x);
+  const reach = Math.round(run);
 
   // --- Warnings (target-based) ---
   if (kneeAngle < 135 && kneeBottomSol.reachable) {
@@ -224,7 +244,7 @@ export function calculateFit(rider: RiderAnthropometrics, p: FitParameters): Fit
   if (backAngle < backTarget - 8) {
     warnings.push({ severity: 'warning', field: 'back', message: 'Position is aggressive for your flexibility — this may stress the lower back on long rides.' });
   }
-  if (!shoulderSol.reachable && dist(hip, hand) > seg.torso + seg.arm) {
+  if (!shoulderReachable) {
     warnings.push({ severity: 'critical', field: 'reach', message: 'Reach to the bars is too long — the rider is over-stretched.' });
   } else if (reach < seg.torso * 0.55) {
     warnings.push({ severity: 'info', field: 'reach', message: 'Cockpit is short — the position is upright and relaxed.' });
@@ -237,7 +257,7 @@ export function calculateFit(rider: RiderAnthropometrics, p: FitParameters): Fit
   const kneePenalty = Math.abs(kneeAngle - 145) * 1.6;
   const backPenalty = Math.abs(backAngle - backTarget) * 1.2;
   const hipPenalty = Math.max(0, 48 - hipAngle) * 1.4;
-  const reachPenalty = !shoulderSol.reachable ? 35 : 0;
+  const reachPenalty = !shoulderReachable ? 35 : 0;
   const fitScore = clamp(
     Math.round(100 - kneePenalty - backPenalty - hipPenalty - reachPenalty),
     0,
