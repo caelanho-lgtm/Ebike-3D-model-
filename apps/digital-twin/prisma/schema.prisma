@@ -1,0 +1,87 @@
+// Bike Fit Digital Twin — multi-tenant schema.
+//
+// Shared-schema multitenancy: every row carries a `tenantId`; the application
+// layer filters all queries by the authenticated tenant. PostgreSQL is the
+// production datastore (set DATABASE_URL accordingly).
+
+generator client {
+  provider = "prisma-client-js"
+  // Custom output keeps this client separate from other Prisma schemas in the
+  // monorepo (the API app uses its own SQLite client at the default location).
+  output   = "./generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  primaryColor String   @default("#0ea5e9")
+  createdAt    DateTime @default(now())
+
+  riders   Rider[]
+  bikes    Bike[]
+  sessions FitSession[]
+}
+
+model Rider {
+  id           String   @id @default(cuid())
+  tenantId     String
+  name         String?
+  sex          String   @default("male")
+  heightMm     Int
+  inseamMm     Int?
+  armLengthMm  Int?
+  torsoMm      Int?
+  flexibility  String   @default("medium")
+  createdAt    DateTime @default(now())
+
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions FitSession[]
+
+  @@index([tenantId])
+}
+
+model Bike {
+  id          String   @id @default(cuid())
+  tenantId    String
+  brand       String
+  name        String
+  discipline  String
+  wheelRadius Int      @default(345)
+  /// JSON: Record<FrameSize, BikeGeometry>
+  sizesJson   String
+  modelUrl    String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sessions FitSession[]
+
+  @@index([tenantId])
+}
+
+model FitSession {
+  id        String   @id @default(cuid())
+  tenantId  String
+  riderId   String?
+  bikeId    String?
+  size      String
+  /// JSON: FitParameters
+  paramsJson String
+  /// JSON: FitResult
+  resultJson String
+  fitScore   Int
+  createdAt  DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  rider  Rider? @relation(fields: [riderId], references: [id], onDelete: SetNull)
+  bike   Bike?  @relation(fields: [bikeId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([tenantId, createdAt])
+}
