@@ -1,0 +1,17 @@
+{
+  "name": "@fitwerx/widget",
+  "version": "1.0.0",
+  "description": "Embeddable FitWerx fitting widget for brand & shop websites.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist .vite *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.3"
+  }
+}

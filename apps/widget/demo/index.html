@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FitWerx Widget — Embed Demo</title>
+    <style>
+      body { margin: 0; font-family: system-ui, sans-serif; background: #f4f6fb; color: #0f172a; }
+      .hero { max-width: 880px; margin: 0 auto; padding: 48px 20px 12px; }
+      .hero h1 { font-size: 30px; margin: 0 0 6px; }
+      .hero p { color: #475569; }
+      .mock-shop { background: #fff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; margin: 24px auto; max-width: 880px; }
+      .note { max-width: 880px; margin: 0 auto 40px; padding: 0 20px; color: #64748b; font-size: 13px; }
+      code { background: #eef2ff; padding: 2px 6px; border-radius: 5px; }
+    </style>
+  </head>
+  <body>
+    <div class="hero">
+      <h1>🚲 Ridgeline Cycles</h1>
+      <p>This is a mock storefront. The fitting widget below is embedded with a single script tag.</p>
+    </div>
+
+    <div class="mock-shop">
+      <div id="fitwerx-widget"></div>
+    </div>
+
+    <p class="note">
+      Pass your tenant + public API key via the URL, e.g.
+      <code>demo/index.html?tenant=demovelo&amp;key=fwk_xxx&amp;api=http://localhost:4000</code>.
+      In production you would instead hardcode the <code>data-*</code> attributes on the script tag.
+    </p>
+
+    <!-- The built widget bundle (output of `npm run build`). -->
+    <script src="../dist/fitwerx-widget.js"></script>
+    <script>
+      const params = new URLSearchParams(location.search);
+      window.FitWerx.render('#fitwerx-widget', {
+        tenant: params.get('tenant') || 'demovelo',
+        apiKey: params.get('key') || 'REPLACE_WITH_PUBLIC_API_KEY',
+        apiBase: params.get('api') || 'http://localhost:4000',
+      });
+    </script>
+  </body>
+</html>
