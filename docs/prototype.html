@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Sight VLT · Fit Bench</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1418;
+    --bg-2:#0a0f12;
+    --panel:#151e24;
+    --panel-2:#1b262d;
+    --line:#26343c;
+    --line-soft:#1d2930;
+    --ink:#e9eff2;
+    --muted:#7e919b;
+    --muted-2:#566873;
+    --amber:#f2a93b;
+    --amber-deep:#e08a26;
+    --cyan:#41c8de;
+    --cyan-deep:#2a93a6;
+    --good:#5fbf7a;
+    --warn:#e8b04b;
+    --bad:#e06d5a;
+    --r:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{
+    display:grid;
+    grid-template-columns:360px 1fr;
+    grid-template-rows:100%;
+    height:100%;
+    width:100%;
+  }
+
+  /* ---------- Control rail ---------- */
+  .rail{
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    overflow-y:auto;
+    overflow-x:hidden;
+    display:flex;
+    flex-direction:column;
+    scrollbar-width:thin;
+    scrollbar-color:var(--line) transparent;
+  }
+  .rail::-webkit-scrollbar{width:8px}
+  .rail::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+
+  .brand{
+    padding:22px 24px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .brand .eyebrow{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:var(--cyan);
+    display:flex;align-items:center;gap:8px;
+  }
+  .brand .eyebrow::before{
+    content:"";width:18px;height:1px;background:var(--cyan);display:inline-block;
+  }
+  .brand h1{
+    margin:10px 0 2px;
+    font-size:25px;font-weight:700;letter-spacing:-.01em;line-height:1.05;
+  }
+  .brand h1 span{color:var(--muted);font-weight:500}
+  .brand .sub{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;color:var(--muted-2);letter-spacing:.02em;
+  }
+
+  .section{padding:20px 24px;border-bottom:1px solid var(--line-soft)}
+  .section:last-child{border-bottom:none}
+  .section > .lbl{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;
+    color:var(--muted);margin-bottom:16px;display:flex;justify-content:space-between;align-items:baseline;
+  }
+  .section > .lbl .idx{color:var(--muted-2)}
+
+  /* number inputs */
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  .field .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .field .name{font-size:13px;color:var(--ink);font-weight:500}
+  .field .val{
+    font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;
+    color:var(--amber);
+  }
+  .field .val small{color:var(--muted-2);font-weight:400;margin-left:2px}
+
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:3px;
+    background:var(--line);outline:none;margin:6px 0;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;
+    background:var(--amber);border:3px solid var(--panel);
+    box-shadow:0 0 0 1px var(--amber-deep), 0 2px 6px rgba(0,0,0,.5);cursor:grab;
+  }
+  input[type=range]::-webkit-slider-thumb:active{cursor:grabbing;background:#ffc564}
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;background:var(--amber);
+    border:3px solid var(--panel);box-shadow:0 0 0 1px var(--amber-deep);cursor:grab;
+  }
+  input[type=range].cyan::-webkit-slider-thumb{background:var(--cyan);box-shadow:0 0 0 1px var(--cyan-deep),0 2px 6px rgba(0,0,0,.5)}
+  input[type=range].cyan::-moz-range-thumb{background:var(--cyan);box-shadow:0 0 0 1px var(--cyan-deep)}
+  input[type=range]:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cyan)}
+
+  .ticks{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--muted-2);margin-top:2px}
+
+  .presets{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:4px}
+  .chip{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.02em;
+    padding:9px 4px;text-align:center;border:1px solid var(--line);border-radius:7px;
+    background:transparent;color:var(--muted);cursor:pointer;transition:.15s;
+  }
+  .chip:hover{border-color:var(--muted-2);color:var(--ink)}
+  .chip.on{border-color:var(--amber);color:var(--amber);background:rgba(242,169,59,.08)}
+  .chip:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--amber)}
+
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:4px}
+  .seg button{
+    font-family:'Space Grotesk';font-size:12.5px;font-weight:600;padding:9px;
+    border:1px solid var(--line);border-radius:7px;background:transparent;color:var(--muted);
+    cursor:pointer;transition:.15s;display:flex;align-items:center;justify-content:center;gap:6px;
+  }
+  .seg button:hover{border-color:var(--muted-2);color:var(--ink)}
+  .seg button.on{border-color:var(--amber);color:var(--amber);background:rgba(242,169,59,.08)}
+  .seg button:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--amber)}
+  .seg .ic{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.85}
+
+  .btn{
+    width:100%;padding:11px;border-radius:8px;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--ink);font-family:'Space Grotesk';
+    font-size:13px;font-weight:600;cursor:pointer;transition:.15s;letter-spacing:.01em;
+  }
+  .btn:hover{border-color:var(--cyan-deep);background:#202d35}
+  .btn.primary{background:var(--amber);color:#1a1206;border-color:var(--amber)}
+  .btn.primary:hover{background:#ffbb4d}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--cyan)}
+  .btnrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+  .toggle{display:flex;align-items:center;justify-content:space-between;padding:9px 0;cursor:pointer}
+  .toggle .name{font-size:13px;color:var(--ink)}
+  .toggle .sw{width:38px;height:21px;border-radius:11px;background:var(--line);position:relative;transition:.18s;flex:none}
+  .toggle .sw::after{content:"";position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
+  .toggle.on .sw{background:rgba(65,200,222,.25)}
+  .toggle.on .sw::after{left:20px;background:var(--cyan)}
+
+  /* ---------- Stage ---------- */
+  .stage{position:relative;background:radial-gradient(120% 120% at 60% 25%, #15202700 30%, #0a0f1280 100%),var(--bg-2);overflow:hidden}
+  #scene{display:block;width:100%;height:100%}
+
+  .stage-top{
+    position:absolute;top:0;left:0;right:0;padding:16px 20px;
+    display:flex;justify-content:space-between;align-items:flex-start;
+    pointer-events:none;gap:12px;
+  }
+  .geo-card{
+    background:rgba(13,19,23,.72);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:var(--r);padding:11px 14px;
+    pointer-events:auto;
+  }
+  .geo-card .t{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin-bottom:8px}
+  .geo-grid{display:grid;grid-template-columns:auto auto;gap:3px 16px}
+  .geo-grid .k{font-size:11px;color:var(--muted)}
+  .geo-grid .v{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink);text-align:right}
+
+  .hint{
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted-2);
+    letter-spacing:.04em;text-align:right;line-height:1.7;pointer-events:none;
+  }
+  .hint b{color:var(--muted)}
+
+  /* fit readout dock */
+  .dock{
+    position:absolute;left:20px;right:20px;bottom:18px;
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;pointer-events:none;
+  }
+  .stat{
+    background:rgba(13,19,23,.78);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:var(--r);
+    padding:10px 16px;min-width:118px;text-align:center;
+  }
+  .stat .k{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+  .stat .v{font-family:'JetBrains Mono',monospace;font-size:19px;font-weight:600;color:var(--ink);line-height:1}
+  .stat .v small{font-size:11px;color:var(--muted-2);font-weight:400}
+  .stat .tag{font-size:9.5px;margin-top:5px;letter-spacing:.04em}
+  .tag.good{color:var(--good)} .tag.warn{color:var(--warn)} .tag.bad{color:var(--bad)}
+  .stat.flag{border-color:var(--amber)}
+
+  .loader{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    flex-direction:column;gap:14px;background:var(--bg-2);z-index:5;transition:opacity .4s}
+  .loader.hide{opacity:0;pointer-events:none}
+  .loader .ring{width:34px;height:34px;border:2px solid var(--line);border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite}
+  .loader .txt{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .coach{
+    position:absolute;left:50%;top:16px;transform:translateX(-50%);
+    background:rgba(13,19,23,.82);backdrop-filter:blur(8px);
+    border:1px solid var(--cyan-deep);border-radius:20px;padding:8px 15px;
+    font-size:12px;color:var(--ink);display:flex;align-items:center;gap:9px;
+    pointer-events:none;transition:opacity .5s;z-index:4;white-space:nowrap;
+  }
+  .coach b{color:var(--cyan);font-weight:600}
+  .coach .pulse{width:8px;height:8px;border-radius:50%;background:var(--cyan);
+    box-shadow:0 0 0 0 rgba(65,200,222,.6);animation:cpl 1.7s infinite;flex:none}
+  .coach.hide{opacity:0}
+  @keyframes cpl{0%{box-shadow:0 0 0 0 rgba(65,200,222,.5)}70%{box-shadow:0 0 0 9px rgba(65,200,222,0)}100%{box-shadow:0 0 0 0 rgba(65,200,222,0)}}
+  @media(max-width:860px){.coach{font-size:11px;top:10px}}
+
+  .legend{
+    position:absolute;bottom:18px;right:20px;display:flex;flex-direction:column;gap:6px;
+    pointer-events:none;
+  }
+  @media(max-width:900px){.legend{display:none}}
+  .legend .li{display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted)}
+  .legend .dot{width:9px;height:9px;border-radius:2px}
+
+  /* ---------- mobile ---------- */
+  @media(max-width:860px){
+    .app{grid-template-columns:1fr;grid-template-rows:54vh 1fr}
+    .stage{grid-row:1}
+    .rail{grid-row:2;border-right:none;border-top:1px solid var(--line)}
+    .dock{bottom:12px}.stat{min-width:96px;padding:8px 12px}.stat .v{font-size:16px}
+    .geo-card{display:none}
+  }
+  @media(prefers-reduced-motion:reduce){.loader .ring{animation:none}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ====== STAGE ====== -->
+  <div class="stage">
+    <canvas id="scene"></canvas>
+    <div class="loader" id="loader"><div class="ring"></div><div class="txt">Building bench</div></div>
+    <div class="coach" id="coach"><span class="pulse"></span>Grab the <b>saddle</b> or <b>handlebar</b> in 3D to adjust the fit</div>
+
+    <div class="stage-top">
+      <div class="geo-card">
+        <div class="t">Frame geometry</div>
+        <div class="geo-grid">
+          <div class="k">Head angle</div><div class="v">64.0°</div>
+          <div class="k">Seat angle</div><div class="v">77.75°</div>
+          <div class="k">Reach</div><div class="v">497.5</div>
+          <div class="k">Stack</div><div class="v">645.0</div>
+          <div class="k">Chainstay</div><div class="v">440.0</div>
+          <div class="k">Wheelbase</div><div class="v">1281</div>
+        </div>
+      </div>
+      <div class="hint">
+        <b>grab</b> saddle / bars to fit<br>
+        <b>drag</b> orbit · <b>scroll</b> zoom · <b>right-drag</b> pan
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="li"><span class="dot" style="background:#f2a93b"></span>rider (you)</div>
+      <div class="li"><span class="dot" style="background:#5b7682"></span>frame</div>
+      <div class="li"><span class="dot" style="background:#41c8de"></span>fit dimensions</div>
+    </div>
+
+    <div class="dock" id="dock">
+      <div class="stat"><div class="k">Saddle height</div><div class="v" id="s-saddle">—</div></div>
+      <div class="stat"><div class="k">Knee angle</div><div class="v" id="s-knee">—</div><div class="tag" id="t-knee"></div></div>
+      <div class="stat"><div class="k">Torso angle</div><div class="v" id="s-torso">—</div><div class="tag" id="t-torso"></div></div>
+      <div class="stat"><div class="k">Bar drop</div><div class="v" id="s-drop">—</div></div>
+    </div>
+  </div>
+
+  <!-- ====== RAIL ====== -->
+  <aside class="rail">
+    <div class="brand">
+      <div class="eyebrow">Norco · e-MTB</div>
+      <h1>Sight VLT <span>Fit Bench</span></h1>
+      <div class="sub">size geometry · live posture solver</div>
+    </div>
+
+    <div class="section">
+      <div class="lbl"><span>Your body</span><span class="idx">01</span></div>
+      <div class="field">
+        <div class="row"><span class="name">Height</span><span class="val" id="v-height">178 <small>cm</small></span></div>
+        <input type="range" id="height" min="150" max="205" value="178" step="1" aria-label="Height in centimetres">
+        <div class="ticks"><span>150</span><span>205</span></div>
+      </div>
+      <div class="field">
+        <div class="row"><span class="name">Inseam</span><span class="val" id="v-inseam">83 <small>cm</small></span></div>
+        <input type="range" id="inseam" min="66" max="100" value="83" step="1" aria-label="Inseam in centimetres">
+        <div class="ticks"><span>66</span><span>100</span></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="section" style="padding:0;border:none">
+          <div class="lbl" style="margin-bottom:9px"><span>Quick size</span></div>
+          <div class="presets" id="presets">
+            <button class="chip" data-h="163" data-i="74">163/74</button>
+            <button class="chip" data-h="172" data-i="79">172/79</button>
+            <button class="chip on" data-h="178" data-i="83">178/83</button>
+            <button class="chip" data-h="184" data-i="87">184/87</button>
+            <button class="chip" data-h="191" data-i="91">191/91</button>
+            <button class="chip" data-h="198" data-i="95">198/95</button>
+          </div>
+        </div>
+        <div class="section" style="padding:14px 0 0;border:none">
+          <div class="lbl" style="margin-bottom:9px"><span>Rider model</span></div>
+          <div class="seg" id="sex">
+            <button data-sex="m" class="on"><span class="ic"></span>Male</button>
+            <button data-sex="f"><span class="ic"></span>Female</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="lbl"><span>Tune the fit</span><span class="idx">02</span></div>
+      <p style="font-size:11.5px;color:var(--muted-2);margin:-6px 0 14px;line-height:1.5">Grab the saddle or handlebar in the 3D view — or fine-tune here.</p>
+      <div class="field">
+        <div class="row"><span class="name">Saddle height</span><span class="val" id="v-sh">735 <small>mm</small></span></div>
+        <input type="range" id="saddle" min="500" max="950" value="735" step="1" aria-label="Saddle height in millimetres">
+        <div class="ticks"><span>low</span><span>BB → saddle top</span><span>high</span></div>
+      </div>
+      <div class="field">
+        <div class="row"><span class="name">Stem angle</span><span class="val cyanval" id="v-stem">18 <small>°</small></span></div>
+        <input type="range" id="stem" class="cyan" min="-12" max="46" value="18" step="1" aria-label="Stem angle in degrees">
+        <div class="ticks"><span>slammed</span><span>reach <span id="v-reach">85</span> mm</span><span>high</span></div>
+      </div>
+      <button class="btn primary" id="suggest" style="margin-top:6px">Suggest fit from my body</button>
+    </div>
+
+    <div class="section">
+      <div class="lbl"><span>Display</span><span class="idx">03</span></div>
+      <div class="toggle on" id="t-dims" role="switch" aria-checked="true" tabindex="0">
+        <span class="name">Fit dimensions</span><span class="sw"></span>
+      </div>
+      <div class="toggle on" id="t-rider" role="switch" aria-checked="true" tabindex="0">
+        <span class="name">Show rider</span><span class="sw"></span>
+      </div>
+      <div class="toggle" id="t-spin" role="switch" aria-checked="false" tabindex="0">
+        <span class="name">Auto-rotate</span><span class="sw"></span>
+      </div>
+      <div class="btnrow" style="margin-top:14px">
+        <button class="btn" id="view-side">Side view</button>
+        <button class="btn" id="view-iso">3/4 view</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="lbl"><span>Fit notes</span><span class="idx">04</span></div>
+      <div id="notes" style="font-size:12.5px;line-height:1.65;color:var(--muted)"></div>
+    </div>
+  </aside>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+"use strict";
+(function(){
+  // ---------------------------------------------------------------- constants
+  const MM = 0.001;                 // mm -> three units (metres)
+  const WHEEL_R   = 0.370;          // 29" wheel radius
+  const BB_DROP   = 0.028;
+  const BB_Y      = WHEEL_R - BB_DROP;      // bottom-bracket height
+  const AXLE_Y    = WHEEL_R;
+  const CS        = 0.440;          // chainstay (BB->rear axle)
+  const REAR_X    = -Math.sqrt(CS*CS - BB_DROP*BB_DROP); // horizontal comp
+  const FRONT_X   = 0.842;          // gives ~1281 wheelbase
+  const HTA = 64.0 * Math.PI/180;
+  const STA = 77.75 * Math.PI/180;
+  const REACH = 0.4975, STACK = 0.645;
+  const HEAD_TOP = new THREE.Vector2(REACH, BB_Y + STACK);
+  const HT_LEN = 0.125;
+  const HEAD_BOT = new THREE.Vector2(
+     HEAD_TOP.x + HT_LEN*Math.cos(HTA),
+     HEAD_TOP.y - HT_LEN*Math.sin(HTA));
+  const ST_DIR = new THREE.Vector2(-Math.cos(STA), Math.sin(STA)); // up the seat tube
+  const ST_JUNC = new THREE.Vector2(BB_Y*0 - 0.43*Math.cos(STA), BB_Y + 0.43*Math.sin(STA));
+  const BB = new THREE.Vector2(0, BB_Y);
+  const STEM_LEN = 0.092;           // effective stem reach from steerer top (adjustable neck)
+
+  const COL = {
+    frame:0x5b7682, frameDark:0x3f535c, batt:0x33444c, tire:0x14191c,
+    rim:0x6a7d86, rider:0xf2a93b, riderDark:0xd98e2c, joint:0xffc669,
+    riderF:0xffb36b, riderFWire:0xffe0b0, riderMWire:0xffd089, holoJoint:0xfff1d6,
+    saddle:0x222b30, ground:0x0c1115
+  };
+
+  // ---------------------------------------------------------------- three core
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0f12);
+  scene.fog = new THREE.Fog(0x0a0f12, 4.2, 8.5);
+
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+
+  // lights
+  scene.add(new THREE.HemisphereLight(0x2a3a44, 0x05080a, 0.85));
+  const key = new THREE.DirectionalLight(0xfff1dc, 1.15);
+  key.position.set(2.4, 3.4, 2.2);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048,2048);
+  key.shadow.camera.left=-2.2; key.shadow.camera.right=2.2;
+  key.shadow.camera.top=2.4; key.shadow.camera.bottom=-0.4;
+  key.shadow.camera.near=0.5; key.shadow.camera.far=10;
+  key.shadow.bias=-0.0004;
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x3fc7dd, 0.5);
+  rim.position.set(-2.5, 1.6, -2.2); scene.add(rim);
+  const fill = new THREE.DirectionalLight(0xf2a93b, 0.22);
+  fill.position.set(1.5, 0.6, -2.0); scene.add(fill);
+
+  // ground
+  const groundMat = new THREE.MeshStandardMaterial({color:COL.ground, roughness:0.95, metalness:0.0});
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(7, 64), groundMat);
+  ground.rotation.x = -Math.PI/2; ground.position.y = 0; ground.receiveShadow = true;
+  scene.add(ground);
+  const grid = new THREE.GridHelper(8, 32, 0x223038, 0x141d23);
+  grid.material.opacity = 0.5; grid.material.transparent = true; grid.position.y = 0.001;
+  scene.add(grid);
+
+  // groups
+  const bikeGroup = new THREE.Group(); scene.add(bikeGroup);   // static frame/wheels/cranks
+  const partsGroup = new THREE.Group(); scene.add(partsGroup); // saddle/seatpost/stem/bar (move)
+  const riderGroup = new THREE.Group(); scene.add(riderGroup); // holographic rider
+  const handlesGroup = new THREE.Group(); scene.add(handlesGroup); // drag handles
+  const dimsGroup = new THREE.Group(); scene.add(dimsGroup);
+  const sceneCenter = new THREE.Vector3(0.42, 0.62, 0);
+
+  // ---------------------------------------------------------------- helpers
+  function mat(color, opt={}){
+    return new THREE.MeshStandardMaterial(Object.assign(
+      {color, roughness:0.55, metalness:0.25}, opt));
+  }
+  const upVec = new THREE.Vector3(0,1,0);
+  function segment(p0, p1, r, material){
+    // p0,p1 are THREE.Vector3
+    const dir = new THREE.Vector3().subVectors(p1,p0);
+    const len = dir.length();
+    const geo = new THREE.CylinderGeometry(r, r, len, 16, 1, false);
+    const m = new THREE.Mesh(geo, material);
+    m.position.copy(p0).addScaledVector(dir, 0.5);
+    m.quaternion.setFromUnitVectors(upVec, dir.clone().normalize());
+    m.castShadow = true;
+    return m;
+  }
+  function ball(p, r, material){
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r,18,14), material);
+    m.position.copy(p); m.castShadow = true; return m;
+  }
+  function v3(v2, z){ return new THREE.Vector3(v2.x, v2.y, z||0); }
+
+  // 2D two-bone IK: returns joint position between root & target.
+  // bendSign chooses which side the joint falls on (+1 / -1).
+  function ik2(root, target, l1, l2, bendSign){
+    const d = target.clone().sub(root);
+    let dist = d.length();
+    const maxd = l1 + l2;
+    let clamped = false;
+    if(dist > maxd*0.999){ dist = maxd*0.999; clamped = true; }
+    if(dist < Math.abs(l1-l2)+1e-4){ dist = Math.abs(l1-l2)+1e-4; }
+    const dn = d.clone().normalize();
+    const a = (l1*l1 - l2*l2 + dist*dist) / (2*dist);
+    const h = Math.sqrt(Math.max(0, l1*l1 - a*a));
+    const mid = root.clone().add(dn.clone().multiplyScalar(a));
+    const perp = new THREE.Vector2(-dn.y, dn.x).multiplyScalar(h*bendSign);
+    return { joint: mid.add(perp), clamped };
+  }
+  // circle intersection, pick upper (max y)
+  function circlesUpper(c0, r0, c1, r1){
+    const d = c1.clone().sub(c0); let dist = d.length();
+    if(dist > r0+r1){ // unreachable: place along line
+      return { p: c0.clone().add(d.clone().normalize().multiplyScalar(r0)), reach:false };
+    }
+    if(dist < Math.abs(r0-r1)) dist = Math.abs(r0-r1)+1e-4;
+    const dn = d.clone().normalize();
+    const a = (r0*r0 - r1*r1 + dist*dist)/(2*dist);
+    const h = Math.sqrt(Math.max(0, r0*r0 - a*a));
+    const mid = c0.clone().add(dn.clone().multiplyScalar(a));
+    const perp = new THREE.Vector2(-dn.y, dn.x).multiplyScalar(h);
+    const s1 = mid.clone().add(perp), s2 = mid.clone().sub(perp);
+    return { p: (s1.y >= s2.y ? s1 : s2), reach:true };
+  }
+  function angleAt(a, b, c){ // interior angle at b (deg)
+    const u = a.clone().sub(b), v = c.clone().sub(b);
+    return Math.acos(THREE.MathUtils.clamp(u.dot(v)/(u.length()*v.length()),-1,1))*180/Math.PI;
+  }
+
+  function labelSprite(text, color){
+    const pad=16, fs=42;
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    ctx.font = `600 ${fs}px 'JetBrains Mono', monospace`;
+    const w = ctx.measureText(text).width;
+    c.width = w + pad*2; c.height = fs + pad*1.4;
+    ctx.font = `600 ${fs}px 'JetBrains Mono', monospace`;
+    ctx.fillStyle = 'rgba(10,15,18,0.82)';
+    roundRect(ctx,0,0,c.width,c.height,14); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth=2; roundRect(ctx,1,1,c.width-2,c.height-2,13); ctx.stroke();
+    ctx.fillStyle = color; ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillText(text, c.width/2, c.height/2+2);
+    const tex = new THREE.CanvasTexture(c); tex.anisotropy=4;
+    const spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthTest:false, transparent:true}));
+    const s = 0.0016; spr.scale.set(c.width*s, c.height*s, 1);
+    spr.renderOrder = 999;
+    return spr;
+  }
+  function roundRect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+  function lineSeg(points, color, dashed){
+    const geo = new THREE.BufferGeometry().setFromPoints(points);
+    const m = dashed
+      ? new THREE.LineDashedMaterial({color, dashSize:0.03, gapSize:0.02, transparent:true, opacity:0.9})
+      : new THREE.LineBasicMaterial({color, transparent:true, opacity:0.9});
+    const l = new THREE.Line(geo, m);
+    if(dashed) l.computeLineDistances();
+    return l;
+  }
+  function arc(cx, cy, r, a0, a1, color){
+    const pts=[]; const n=40;
+    for(let i=0;i<=n;i++){const a=a0+(a1-a0)*i/n; pts.push(new THREE.Vector3(cx+r*Math.cos(a), cy+r*Math.sin(a), 0));}
+    return lineSeg(pts, color, false);
+  }
+
+  // ---------------------------------------------------------------- build bike
+  function buildBike(){
+    bikeGroup.clear();
+    const frameMat = mat(COL.frame, {roughness:0.4, metalness:0.45});
+    const battMat  = mat(COL.batt,  {roughness:0.5, metalness:0.5});
+    const darkMat  = mat(COL.frameDark, {roughness:0.45, metalness:0.45});
+
+    const bb=v3(BB), htop=v3(HEAD_TOP), hbot=v3(HEAD_BOT), sjun=v3(ST_JUNC);
+    const rear=new THREE.Vector3(REAR_X, AXLE_Y, 0), front=new THREE.Vector3(FRONT_X, AXLE_Y, 0);
+
+    bikeGroup.add(segment(bb, hbot, 0.029, battMat));      // down tube (battery, fat)
+    bikeGroup.add(segment(sjun, htop, 0.018, frameMat));   // top tube
+    bikeGroup.add(segment(bb, sjun, 0.018, frameMat));     // seat tube (lower)
+    bikeGroup.add(segment(htop, hbot, 0.021, darkMat));    // head tube
+    bikeGroup.add(segment(hbot, front, 0.016, darkMat));   // fork
+    // twin chainstay + seatstay (offset in z)
+    [-0.055,0.055].forEach(z=>{
+      const r2=rear.clone(); r2.z=z*0.7;
+      bikeGroup.add(segment(new THREE.Vector3(bb.x,bb.y,z), r2, 0.011, darkMat));
+      bikeGroup.add(segment(new THREE.Vector3(sjun.x,sjun.y,z*0.5), r2, 0.010, darkMat));
+    });
+    // shock area accent
+    bikeGroup.add(ball(new THREE.Vector3((bb.x+sjun.x)/2+0.06,(bb.y+sjun.y)/2+0.02,0),0.022,mat(COL.rider,{emissive:0x3a2400,emissiveIntensity:0.3,roughness:0.5})));
+
+    // wheels
+    bikeGroup.add(makeWheel(rear));
+    bikeGroup.add(makeWheel(front));
+
+    // motor at BB (e-MTB)
+    bikeGroup.add(ball(bb, 0.052, mat(COL.frameDark,{roughness:0.4,metalness:0.6})));
+
+    // cranks + pedals
+    const ca = 12*Math.PI/180; // crank angle from vertical, toward front
+    const crankL = 0.170;
+    const pedDown = new THREE.Vector3(BB.x+crankL*Math.sin(ca), BB.y-crankL*Math.cos(ca), 0.075);
+    const pedUp   = new THREE.Vector3(BB.x-crankL*Math.sin(ca), BB.y+crankL*Math.cos(ca), -0.075);
+    [[pedDown,0.075],[pedUp,-0.075]].forEach(([p,z])=>{
+      bikeGroup.add(segment(new THREE.Vector3(bb.x,bb.y,z*0.55), p, 0.009, darkMat));
+      const ped=new THREE.Mesh(new THREE.BoxGeometry(0.095,0.018,0.052), mat(COL.frameDark));
+      ped.position.copy(p); ped.castShadow=true; bikeGroup.add(ped);
+    });
+    BIKE = { rear, front, bb, htop, hbot, sjun, pedDown, pedUp };
+    return BIKE;
+  }
+  let BIKE = null;
+
+  function makeWheel(center){
+    const g = new THREE.Group();
+    const tire = new THREE.Mesh(new THREE.TorusGeometry(WHEEL_R-0.045, 0.045, 16, 48),
+      mat(COL.tire,{roughness:0.85,metalness:0.05}));
+    tire.castShadow=true; g.add(tire);
+    const rimR = WHEEL_R-0.085;
+    const rimMesh = new THREE.Mesh(new THREE.TorusGeometry(rimR, 0.013, 10, 48),
+      mat(COL.rim,{roughness:0.3,metalness:0.7}));
+    g.add(rimMesh);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.10,14), mat(COL.frameDark,{metalness:0.7,roughness:0.3}));
+    hub.rotation.x=Math.PI/2; g.add(hub);
+    // spokes
+    const spokeMat = new THREE.LineBasicMaterial({color:0x44555e, transparent:true, opacity:0.6});
+    for(let i=0;i<12;i++){
+      const a=i/12*Math.PI*2;
+      const z=(i%2?1:-1)*0.035;
+      const pts=[new THREE.Vector3(0,0,z), new THREE.Vector3(rimR*Math.cos(a), rimR*Math.sin(a),0)];
+      g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), spokeMat));
+    }
+    g.position.copy(center);
+    return g;
+  }
+
+  // ---------------------------------------------------------------- build rider
+  let FIT = {};
+  // ---------------------------------------------------------------- holographic rider
+  // translucent emissive "projection" materials (no shadows) + additive wire shell
+  function holoSolid(color, opacity, ei){
+    return new THREE.MeshStandardMaterial({
+      color, emissive:color, emissiveIntensity:ei,
+      transparent:true, opacity, roughness:0.35, metalness:0.0,
+      depthWrite:false, side:THREE.FrontSide
+    });
+  }
+  function holoWire(color, opacity){
+    return new THREE.MeshBasicMaterial({
+      color, wireframe:true, transparent:true, opacity,
+      depthWrite:false, blending:THREE.AdditiveBlending
+    });
+  }
+  // solid mass (+ optional wire shell) at a position with non-uniform scale
+  function holoMass(geo, pos, scale, solidM, wireM){
+    const m = new THREE.Mesh(geo, solidM);
+    m.position.copy(pos); if(scale) m.scale.copy(scale);
+    riderGroup.add(m);
+    if(wireM){
+      const w = new THREE.Mesh(geo, wireM);
+      w.position.copy(pos); if(scale) w.scale.copy(scale).multiplyScalar(1.015);
+      riderGroup.add(w);
+    }
+    return m;
+  }
+  // tapered limb between two Vector3 (r0 at p0, r1 at p1) with optional wire shell
+  function holoLimb(p0, p1, r0, r1, solidM, wireM){
+    const dir = new THREE.Vector3().subVectors(p1,p0); const len = dir.length();
+    const geo = new THREE.CylinderGeometry(r1, r0, len, 14, 1, true);
+    const m = new THREE.Mesh(geo, solidM);
+    m.position.copy(p0).addScaledVector(dir, 0.5);
+    m.quaternion.setFromUnitVectors(upVec, dir.clone().normalize());
+    riderGroup.add(m);
+    if(wireM){
+      const w = new THREE.Mesh(geo, wireM);
+      w.position.copy(m.position); w.quaternion.copy(m.quaternion); w.scale.setScalar(1.03);
+      riderGroup.add(w);
+    }
+    return m;
+  }
+  function holoBall(p, r, m){
+    const b = new THREE.Mesh(new THREE.SphereGeometry(r,14,12), m); b.position.copy(p); return b;
+  }
+
+  // resolve all rider joints + fit metrics for the current parameters
+  function solvePosture(P){
+    const H = P.height/1000, I = P.inseam/1000;
+    const Sh = P.saddle/1000;
+    const a = P.stemAngle*Math.PI/180;
+
+    const legTotal = I*1.13, thigh = legTotal*0.46, shank = legTotal*0.54;
+    const torso = H*0.32, armUp = H*0.18, armLo = H*0.175, armTotal = (armUp+armLo)*0.97;
+    const headR = H*0.052, neck = H*0.052;
+
+    const saddle = BB.clone().add(ST_DIR.clone().multiplyScalar(Sh));
+    const hip = saddle.clone().add(new THREE.Vector2(0.035, 0.045));
+    // grip swings on an arc about the steerer top — the adjustable stem/neck
+    const grip = HEAD_TOP.clone().add(new THREE.Vector2(Math.cos(a), Math.sin(a)).multiplyScalar(STEM_LEN));
+
+    const ankDown = new THREE.Vector2(BIKE.pedDown.x, BIKE.pedDown.y+0.030);
+    const ankUp   = new THREE.Vector2(BIKE.pedUp.x,   BIKE.pedUp.y+0.030);
+    const legD = ik2(hip, ankDown, thigh, shank, +1);
+    const legU = ik2(hip, ankUp,   thigh, shank, +1);
+
+    const sh = circlesUpper(hip, torso, grip, armTotal);
+    const shoulder = sh.p;
+    const torsoDir = shoulder.clone().sub(hip).normalize();
+    const headC = shoulder.clone().add(torsoDir.clone().multiplyScalar(neck+headR));
+
+    const kneeAng = angleAt(hip, legD.joint, ankDown);
+    const torsoAng = Math.atan2(shoulder.y-hip.y, shoulder.x-hip.x)*180/Math.PI;
+    const drop = (saddle.y - grip.y)*1000;
+    const reach = Math.cos(a)*STEM_LEN*1000;
+
+    return { H,I,thigh,shank,armUp,armLo,headR,neck,
+      saddle, hip, grip, ankDown, ankUp, legD, legU, shoulder, torsoDir, headC,
+      metrics:{ saddle:Sh*1000, knee:kneeAng, torso:torsoAng, drop, reach,
+                legClamp:legD.clamped, reachOK:sh.reach,
+                grip, saddleP:saddle, hip, shoulder } };
+  }
+
+  // saddle, seatpost, stem and handlebar (solid, cast shadows) — rebuilt as they move
+  function buildParts(po){
+    partsGroup.clear();
+    const metal = mat(COL.frameDark,{metalness:0.6,roughness:0.3});
+    // saddle
+    const saddleMesh = new THREE.Mesh(new THREE.BoxGeometry(0.10,0.03,0.085), mat(COL.saddle,{roughness:0.7}));
+    saddleMesh.position.copy(v3(po.saddle,0)); saddleMesh.rotation.z = STA - Math.PI/2;
+    saddleMesh.castShadow = true; partsGroup.add(saddleMesh);
+    // seatpost
+    partsGroup.add(segment(v3(ST_JUNC,0), v3(po.saddle,0), 0.0125, metal));
+    // stem (steerer top -> bar clamp) : the adjustable neck
+    partsGroup.add(segment(v3(HEAD_TOP,0), v3(po.grip,0), 0.015, mat(COL.frame,{metalness:0.6,roughness:0.35})));
+    // stem clamp block at the bar
+    const clamp = new THREE.Mesh(new THREE.BoxGeometry(0.03,0.03,0.05), metal);
+    clamp.position.copy(v3(po.grip,0)); clamp.castShadow=true; partsGroup.add(clamp);
+    // handlebar across
+    const barMat = mat(COL.frameDark,{metalness:0.6,roughness:0.35});
+    partsGroup.add(segment(new THREE.Vector3(po.grip.x,po.grip.y,-0.28),
+                           new THREE.Vector3(po.grip.x,po.grip.y, 0.28), 0.013, barMat));
+  }
+
+  // the holographic rider, shaped male/female
+  function buildRider(po){
+    riderGroup.clear();
+    const female = P.sex === 'f';
+    const tint  = female ? COL.riderF : COL.rider;
+    const wireC = female ? COL.riderFWire : COL.riderMWire;
+    const solid  = holoSolid(tint, 0.30, 0.60);
+    const solidD = holoSolid(tint, 0.22, 0.50);
+    const wire   = holoWire(wireC, 0.20);
+    const jmat   = holoSolid(COL.holoJoint, 0.55, 0.95);
+
+    const { hip, shoulder, torsoDir, headC, legD, legU, ankDown, ankUp,
+            thigh, shank, armUp, armLo, grip, headR } = po;
+
+    // depth half-widths (z) — broad shoulders (male) vs wider hips (female)
+    const HIPZ = female ? 0.092 : 0.080;
+    const SHZ  = female ? 0.092 : 0.116;
+    const GRIPZ = 0.27;
+
+    const torsoLen = hip.distanceTo(shoulder);
+    const along = (t)=> hip.clone().addScaledVector(torsoDir, t*torsoLen);
+    // forward-facing normal (rider faces +x toward the bars), slightly downward
+    const fwd = new THREE.Vector2(torsoDir.y, -torsoDir.x);
+
+    // ---- pelvis (wider for female) ----
+    holoMass(new THREE.SphereGeometry(1,16,12), v3(hip,0),
+      new THREE.Vector3(female?0.115:0.108, female?0.085:0.082, female?0.135:0.112),
+      solidD, wire);
+
+    // ---- torso core for continuity ----
+    holoLimb(v3(hip,0), v3(shoulder,0), female?0.082:0.098, female?0.066:0.082, solidD, wire);
+
+    // ---- waist + chest masses ----
+    holoMass(new THREE.SphereGeometry(1,16,12), v3(along(0.42),0),
+      new THREE.Vector3(female?0.078:0.098, 0.12, female?0.10:0.122), solidD, wire);
+    holoMass(new THREE.SphereGeometry(1,16,12), v3(along(0.80),0),
+      new THREE.Vector3(female?0.092:0.115, 0.115, female?0.125:0.165), solid, wire);
+
+    // ---- shoulder yoke (broad for male) ----
+    holoLimb(new THREE.Vector3(shoulder.x,shoulder.y,-SHZ),
+             new THREE.Vector3(shoulder.x,shoulder.y, SHZ), 0.05, 0.05, solidD, wire);
+    holoMass(new THREE.SphereGeometry(1,14,10), v3(shoulder,0),
+      new THREE.Vector3(0.06, female?0.058:0.07, SHZ*1.5), solidD, wire);
+
+    // ---- female chest cue ----
+    if(female){
+      const bp = along(0.66).add(fwd.clone().multiplyScalar(0.055));
+      [-1,1].forEach(s=> riderGroup.add(holoBall(new THREE.Vector3(bp.x, bp.y, s*0.05), 0.05, solid)));
+    }
+
+    // ---- legs ----
+    addHoloLeg(hip, legD.joint, ankDown, HIPZ,  0.075, female, solid, solidD, wire, jmat);
+    addHoloLeg(hip, legU.joint, ankUp,  -HIPZ, -0.075, female, solid, solidD, wire, jmat);
+
+    // ---- arms ----
+    [[-1],[1]].forEach(([s])=>{
+      const shP = new THREE.Vector3(shoulder.x, shoulder.y, s*SHZ*0.86);
+      const grP = new THREE.Vector3(grip.x, grip.y, s*GRIPZ);
+      const a2 = ik2(new THREE.Vector2(shP.x,shP.y), new THREE.Vector2(grP.x,grP.y), armUp, armLo, -1);
+      const elbow = new THREE.Vector3(a2.joint.x, a2.joint.y, (shP.z+grP.z)/2);
+      holoLimb(shP, elbow, female?0.034:0.042, female?0.026:0.030, solid, wire);
+      holoLimb(elbow, grP, female?0.026:0.030, 0.021, solidD, wire);
+      riderGroup.add(holoBall(elbow, 0.028, jmat));
+      riderGroup.add(holoBall(grP, 0.03, jmat));   // hand on grip
+    });
+
+    // ---- neck + head ----
+    const neckBase = v3(shoulder,0);
+    const neckTop  = v3(headC.clone().sub(torsoDir.clone().multiplyScalar(headR)),0);
+    holoLimb(neckBase, neckTop, 0.032, 0.029, solidD, wire);
+    holoMass(new THREE.SphereGeometry(1,18,14), v3(headC,0),
+      new THREE.Vector3(headR*0.92, headR*1.12, headR*0.92), solid, wire);
+
+    // ---- hair (gender cue) ----
+    if(female){
+      // hair cap pulled back + ponytail
+      holoMass(new THREE.SphereGeometry(1,16,12),
+        new THREE.Vector3(headC.x-0.012, headC.y+0.012, 0),
+        new THREE.Vector3(headR*1.02, headR*1.0, headR*1.02), solidD, null);
+      const p0 = new THREE.Vector3(headC.x-0.035, headC.y+0.012, 0);
+      const p1 = new THREE.Vector3(headC.x-0.06,  headC.y-0.10,  0);
+      holoLimb(p0, p1, headR*0.55, headR*0.32, solidD, wire);
+    } else {
+      holoMass(new THREE.SphereGeometry(1,16,12),
+        new THREE.Vector3(headC.x-0.014, headC.y+0.016, 0),
+        new THREE.Vector3(headR*1.0, headR*0.8, headR*1.0), solidD, null);
+    }
+
+    FIT = po.metrics;
+  }
+
+  function addHoloLeg(hip, knee, ankle, hipZ, footZ, female, solid, solidD, wire, jmat){
+    const hipP  = new THREE.Vector3(hip.x, hip.y, hipZ);
+    const kneeP = new THREE.Vector3(knee.x, knee.y, (hipZ+footZ)/2);
+    const ankP  = new THREE.Vector3(ankle.x, ankle.y, footZ);
+    const tT = female?0.05:0.058, tK = female?0.03:0.034, tA = female?0.022:0.025;
+    holoLimb(hipP, kneeP, tT, tK, solid, wire);    // thigh
+    holoLimb(kneeP, ankP, tK, tA, solidD, wire);   // calf
+    riderGroup.add(holoBall(kneeP, 0.034, jmat));
+    riderGroup.add(holoBall(hipP, 0.04, solidD));
+    // foot
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.11,0.028,0.05), solidD);
+    foot.position.copy(ankP).add(new THREE.Vector3(0.02,-0.02,0));
+    riderGroup.add(foot);
+  }
+
+  // ---------------------------------------------------------------- drag handles
+  const HANDLES = [];          // raycast targets (proxy spheres)
+  function buildHandles(po){
+    handlesGroup.clear(); HANDLES.length = 0;
+    addHandle('saddle', v3(po.saddle,0), 0.085);
+    addHandle('stem',   v3(po.grip,0),   0.078);
+  }
+  function addHandle(kind, pos, hitR){
+    // glowing ring affordance (drawn over everything)
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(hitR*0.8, 0.006, 10, 30),
+      new THREE.MeshBasicMaterial({color:0x41c8de, transparent:true, opacity:0.34,
+        depthWrite:false, depthTest:false, blending:THREE.AdditiveBlending}));
+    ring.position.copy(pos); ring.renderOrder = 20;
+    handlesGroup.add(ring);
+    // hit proxy (faint, comfortable target)
+    const proxy = new THREE.Mesh(
+      new THREE.SphereGeometry(hitR, 14, 12),
+      new THREE.MeshBasicMaterial({color:0x41c8de, transparent:true, opacity:0.06,
+        depthWrite:false, depthTest:false}));
+    proxy.position.copy(pos); proxy.renderOrder = 19;
+    proxy.userData = { kind, ring };
+    handlesGroup.add(proxy);
+    HANDLES.push(proxy);
+  }
+
+  // ---------------------------------------------------------------- dimensions
+  function buildDims(){
+    dimsGroup.clear();
+    const z=0.30;
+    const bb = new THREE.Vector3(0,BB_Y,z);
+    const corner = new THREE.Vector3(REACH,BB_Y,z);
+    const top = new THREE.Vector3(REACH,BB_Y+STACK,z);
+    // reach (horizontal)
+    dimsGroup.add(lineSeg([bb,corner], COL_cyan(), true));
+    // stack (vertical)
+    dimsGroup.add(lineSeg([corner,top], COL_cyan(), true));
+    // small ticks
+    dimsGroup.add(tick(bb,'v')); dimsGroup.add(tick(corner,'v')); dimsGroup.add(tick(corner,'h')); dimsGroup.add(tick(top,'h'));
+    // labels
+    const lReach = labelSprite('REACH 497.5', '#41c8de');
+    lReach.position.set(REACH/2, BB_Y-0.07, z); dimsGroup.add(lReach);
+    const lStack = labelSprite('STACK 645', '#41c8de');
+    lStack.position.set(REACH+0.12, BB_Y+STACK/2, z); dimsGroup.add(lStack);
+
+    // head-tube angle arc (at head bottom, ground reference)
+    const hb = v3(HEAD_BOT,0);
+    dimsGroup.add(lineSeg([new THREE.Vector3(hb.x,hb.y,0), new THREE.Vector3(hb.x+0.22,hb.y,0)], 0x2a93a6, false));
+    dimsGroup.add(arc(hb.x, hb.y, 0.16, 0, Math.PI-HTA, 0x41c8de));
+    const lHta = labelSprite('64° HEAD', '#41c8de');
+    lHta.position.set(hb.x+0.30, hb.y+0.12, 0); dimsGroup.add(lHta);
+
+    // seat-tube angle arc (at BB)
+    dimsGroup.add(lineSeg([new THREE.Vector3(0,BB_Y,0), new THREE.Vector3(-0.22,BB_Y,0)], 0x2a93a6, false));
+    dimsGroup.add(arc(0, BB_Y, 0.15, Math.PI-STA, Math.PI, 0x41c8de));
+    const lSta = labelSprite('77.75° SEAT', '#41c8de');
+    lSta.position.set(-0.18, BB_Y+0.20, 0); dimsGroup.add(lSta);
+
+    // wheelbase along ground
+    const wb = lineSeg([new THREE.Vector3(REAR_X,0.012,-z), new THREE.Vector3(FRONT_X,0.012,-z)], 0x2a93a6, true);
+    dimsGroup.add(wb);
+    const lWb = labelSprite('WHEELBASE 1281', '#2a93a6');
+    lWb.position.set((REAR_X+FRONT_X)/2, 0.10, -z); dimsGroup.add(lWb);
+  }
+  function COL_cyan(){return 0x41c8de;}
+  function tick(p, dir){
+    const d = dir==='v' ? new THREE.Vector3(0,0.02,0) : new THREE.Vector3(0.02,0,0);
+    return lineSeg([p.clone().sub(d), p.clone().add(d)], 0x41c8de, false);
+  }
+
+  // ---------------------------------------------------------------- camera ctrl
+  const cam = { theta:-0.95, phi:1.18, radius:3.4, target:sceneCenter.clone(),
+                tTheta:-0.95, tPhi:1.18, tRadius:3.4 };
+  function applyCam(){
+    cam.theta += (cam.tTheta-cam.theta)*0.16;
+    cam.phi   += (cam.tPhi-cam.phi)*0.16;
+    cam.radius+= (cam.tRadius-cam.radius)*0.16;
+    const p = cam.phi, t = cam.theta, r = cam.radius;
+    camera.position.set(
+      cam.target.x + r*Math.sin(p)*Math.sin(t),
+      cam.target.y + r*Math.cos(p),
+      cam.target.z + r*Math.sin(p)*Math.cos(t));
+    camera.lookAt(cam.target);
+  }
+  // ---- pointer: grab a component, else orbit/pan ----
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const dragPlane = new THREE.Plane(new THREE.Vector3(0,0,1), 0); // sagittal plane z=0
+  let drag=null, active=null, hovered=null;
+
+  function setNDC(e){
+    const r = canvas.getBoundingClientRect();
+    ndc.x = ((e.clientX-r.left)/r.width)*2 - 1;
+    ndc.y = -((e.clientY-r.top)/r.height)*2 + 1;
+  }
+  function pickHandle(e){
+    setNDC(e); raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObjects(HANDLES, false);
+    return hits.length ? hits[0].object : null;
+  }
+  function planePoint(e){
+    setNDC(e); raycaster.setFromCamera(ndc, camera);
+    const pt = new THREE.Vector3();
+    return raycaster.ray.intersectPlane(dragPlane, pt) ? pt : null;
+  }
+  function setHover(h){
+    if(h===hovered) return;
+    hovered = h;
+    canvas.style.cursor = h ? 'grab' : '';
+  }
+
+  function pdown(e){
+    const h = pickHandle(e);
+    if(h){
+      active = h.userData.kind; dismissCoach();
+      canvas.setPointerCapture(e.pointerId);
+      canvas.style.cursor = 'grabbing'; e.preventDefault(); return;
+    }
+    drag = {x:e.clientX, y:e.clientY, btn:e.button};
+    canvas.setPointerCapture(e.pointerId);
+  }
+  function pmove(e){
+    if(active){                                   // dragging a component
+      const pt = planePoint(e); if(!pt) return;
+      if(active==='saddle'){
+        let h = (pt.x-BB.x)*ST_DIR.x + (pt.y-BB.y)*ST_DIR.y;
+        h = THREE.MathUtils.clamp(h, 0.50, 0.95);
+        P.saddle = Math.round(h*1000); userTouchedSaddle = true;
+        syncSaddleUI();
+      } else if(active==='stem'){
+        let a = Math.atan2(pt.y-HEAD_TOP.y, pt.x-HEAD_TOP.x)*180/Math.PI;
+        a = THREE.MathUtils.clamp(a, -12, 46);
+        P.stemAngle = Math.round(a); syncStemUI();
+      }
+      rebuild();
+      return;
+    }
+    if(!drag){ setHover(pickHandle(e)); return; }  // idle: hover affordance
+    const dx=e.clientX-drag.x, dy=e.clientY-drag.y; drag.x=e.clientX; drag.y=e.clientY;
+    if(drag.btn===2){ // pan
+      const panS = cam.radius*0.0013;
+      const right = new THREE.Vector3(Math.cos(cam.theta),0,-Math.sin(cam.theta));
+      cam.target.addScaledVector(right, -dx*panS);
+      cam.target.y += dy*panS;
+    } else {
+      cam.tTheta -= dx*0.006;
+      cam.tPhi = THREE.MathUtils.clamp(cam.tPhi - dy*0.006, 0.25, Math.PI*0.78);
+    }
+  }
+  function pup(e){ drag=null; active=null; hovered=null; setHover(pickHandle(e)); }
+  canvas.addEventListener('pointerdown',pdown);
+  canvas.addEventListener('pointermove',pmove);
+  canvas.addEventListener('pointerup',pup);
+  canvas.addEventListener('pointercancel',pup);
+  canvas.addEventListener('contextmenu',e=>e.preventDefault());
+  canvas.addEventListener('wheel',e=>{
+    e.preventDefault();
+    cam.tRadius = THREE.MathUtils.clamp(cam.tRadius*(1+Math.sign(e.deltaY)*0.08), 1.6, 7);
+  },{passive:false});
+  // touch pinch
+  let pinch=null;
+  canvas.addEventListener('touchmove',e=>{
+    if(e.touches.length===2){
+      const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
+      if(pinch) cam.tRadius=THREE.MathUtils.clamp(cam.tRadius*(pinch/d),1.6,7);
+      pinch=d; e.preventDefault();
+    }
+  },{passive:false});
+  canvas.addEventListener('touchend',()=>{pinch=null;});
+
+  function setView(kind){
+    if(kind==='side'){ cam.tTheta=-Math.PI/2; cam.tPhi=Math.PI/2; cam.tRadius=3.1; }
+    else { cam.tTheta=-0.95; cam.tPhi=1.12; cam.tRadius=3.4; }
+  }
+
+  // ---------------------------------------------------------------- UI wiring
+  const P = { height:178, inseam:83, saddle:735, stemAngle:18, sex:'m' };
+  let spin=false, showDims=true, showRider=true, userTouchedSaddle=false, userTouchedStem=false;
+
+  const $ = id=>document.getElementById(id);
+  function fmt(n,u){ return Math.round(n)+(u?` <small>${u}</small>`:''); }
+
+  function rebuild(){
+    const po = solvePosture(P);
+    buildParts(po);
+    riderGroup.visible = showRider;
+    if(showRider) buildRider(po); else { riderGroup.clear(); FIT = po.metrics; }
+    buildHandles(po);
+    updateReadouts();
+  }
+
+  // keep on-screen controls in step with direct 3D manipulation
+  function syncSaddleUI(){ $('saddle').value=P.saddle; $('v-sh').innerHTML=fmt(P.saddle,'mm'); }
+  function syncStemUI(){
+    $('stem').value=P.stemAngle; $('v-stem').innerHTML=P.stemAngle+' <small>°</small>';
+    $('v-reach').textContent=Math.round(Math.cos(P.stemAngle*Math.PI/180)*STEM_LEN*1000);
+  }
+  function dismissCoach(){ const c=$('coach'); if(c) c.classList.add('hide'); }
+
+  function defaultSaddle(){
+    // binary-search saddle so the down-stroke leg sits ~32° from straight
+    const I = P.inseam/1000, legTotal=I*1.13, thigh=legTotal*0.46, shank=legTotal*0.54;
+    const ank = new THREE.Vector2(BIKE? BIKE.pedDown.x : 0.07, (BIKE? BIKE.pedDown.y:0.18)+0.030);
+    const targetReach = (thigh+shank)*0.965; // hip->ankle distance at good extension
+    let lo=0.45, hi=0.95;
+    for(let i=0;i<26;i++){
+      const mid=(lo+hi)/2;
+      const saddle = BB.clone().add(ST_DIR.clone().multiplyScalar(mid));
+      const hip = saddle.clone().add(new THREE.Vector2(0.035,0.045));
+      const d = hip.distanceTo(ank);
+      if(d > targetReach) hi=mid; else lo=mid;
+    }
+    return Math.round((lo+hi)/2*1000);
+  }
+
+  function updateReadouts(){
+    $('s-saddle').innerHTML = fmt(FIT.saddle,'mm');
+    $('s-knee').innerHTML = FIT.knee.toFixed(0)+'<small>°</small>';
+    $('s-torso').innerHTML = FIT.torso.toFixed(0)+'<small>°</small>';
+    $('s-drop').innerHTML = (FIT.drop>=0?'+':'')+Math.round(FIT.drop)+'<small>mm</small>';
+
+    // knee quality: ideal extension ~138-148°
+    const kn=$('t-knee'), kstat=kn.parentElement;
+    if(FIT.legClamp){ kn.textContent='over-extended'; kn.className='tag bad'; kstat.classList.add('flag'); }
+    else if(FIT.knee>=136 && FIT.knee<=150){ kn.textContent='in range'; kn.className='tag good'; kstat.classList.remove('flag'); }
+    else if(FIT.knee<136){ kn.textContent='cramped'; kn.className='tag warn'; kstat.classList.remove('flag'); }
+    else { kn.textContent='leggy'; kn.className='tag warn'; kstat.classList.remove('flag'); }
+
+    const to=$('t-torso'), tstat=to.parentElement;
+    if(!FIT.reachOK){ to.textContent='stretched'; to.className='tag bad'; tstat.classList.add('flag'); }
+    else if(FIT.torso>=40 && FIT.torso<=58){ to.textContent='balanced'; to.className='tag good'; tstat.classList.remove('flag'); }
+    else if(FIT.torso<40){ to.textContent='aggressive'; to.className='tag warn'; tstat.classList.remove('flag'); }
+    else { to.textContent='upright'; to.className='tag good'; tstat.classList.remove('flag'); }
+
+    // notes
+    const notes=[];
+    notes.push(`Suggested saddle for a ${P.inseam} cm inseam is about <b style="color:var(--amber)">${defaultSaddle()} mm</b> (BB to saddle top).`);
+    if(FIT.legClamp) notes.push(`Saddle looks <b style="color:var(--bad)">too high</b> — the leg can't reach the bottom of the stroke. Drop it until the knee shows <b>~140°</b>.`);
+    else if(FIT.knee<136) notes.push(`Knee stays quite bent — raising the saddle a little opens the stroke and eases the knees.`);
+    if(!FIT.reachOK) notes.push(`The bars sit <b style="color:var(--bad)">out of reach</b> for this torso. Raise the stem angle (swing the bar up) to bring them closer.`);
+    else if(FIT.torso<40) notes.push(`A low, forward torso — fast and planted, but harder on the lower back over long days.`);
+    notes.push(`Bars reach <b>${Math.round(FIT.reach)} mm</b> ahead of the steerer, with a bar drop of <b>${(FIT.drop>=0?'+':'')+Math.round(FIT.drop)} mm</b> — that sets how aggressive the front end feels.`);
+    $('notes').innerHTML = notes.map(n=>`<p style="margin:0 0 9px">${n}</p>`).join('');
+  }
+
+  // sliders
+  function bindRange(id, key, label, unit, after){
+    const el=$(id);
+    el.addEventListener('input',()=>{
+      P[key]=+el.value;
+      $(label).innerHTML = fmt(+el.value, unit);
+      if(after) after();
+      rebuild();
+    });
+  }
+  $('height').addEventListener('input',()=>{ P.height=+$('height').value; $('v-height').innerHTML=fmt(P.height,'cm'); syncPreset(); rebuild(); });
+  $('inseam').addEventListener('input',()=>{
+    P.inseam=+$('inseam').value; $('v-inseam').innerHTML=fmt(P.inseam,'cm'); syncPreset();
+    if(!userTouchedSaddle){ P.saddle=defaultSaddle(); $('saddle').value=P.saddle; $('v-sh').innerHTML=fmt(P.saddle,'mm'); }
+    rebuild();
+  });
+  $('saddle').addEventListener('input',()=>{ userTouchedSaddle=true; P.saddle=+$('saddle').value; syncSaddleUI(); rebuild(); });
+  $('stem').addEventListener('input',()=>{ userTouchedStem=true; P.stemAngle=+$('stem').value; syncStemUI(); rebuild(); });
+
+  // rider model (male / female)
+  document.querySelectorAll('#sex button').forEach(b=>{
+    b.addEventListener('click',()=>{
+      P.sex=b.dataset.sex;
+      document.querySelectorAll('#sex button').forEach(x=>x.classList.toggle('on', x===b));
+      rebuild();
+    });
+  });
+
+  // presets
+  function syncPreset(){
+    document.querySelectorAll('#presets .chip').forEach(c=>{
+      c.classList.toggle('on', +c.dataset.h===P.height && +c.dataset.i===P.inseam);
+    });
+  }
+  document.querySelectorAll('#presets .chip').forEach(c=>{
+    c.addEventListener('click',()=>{
+      P.height=+c.dataset.h; P.inseam=+c.dataset.i;
+      $('height').value=P.height; $('inseam').value=P.inseam;
+      $('v-height').innerHTML=fmt(P.height,'cm'); $('v-inseam').innerHTML=fmt(P.inseam,'cm');
+      P.saddle=defaultSaddle(); userTouchedSaddle=false;
+      $('saddle').value=P.saddle; $('v-sh').innerHTML=fmt(P.saddle,'mm');
+      syncPreset(); rebuild();
+    });
+  });
+
+  // suggest
+  $('suggest').addEventListener('click',()=>{
+    P.saddle=defaultSaddle(); P.stemAngle=18; userTouchedSaddle=false; userTouchedStem=false;
+    syncSaddleUI(); syncStemUI();
+    rebuild();
+  });
+
+  // toggles
+  function bindToggle(id, fn){
+    const el=$(id);
+    const act=()=>{ const on=!el.classList.contains('on'); el.classList.toggle('on',on); el.setAttribute('aria-checked',on); fn(on); };
+    el.addEventListener('click',act);
+    el.addEventListener('keydown',e=>{ if(e.key===' '||e.key==='Enter'){e.preventDefault();act();} });
+  }
+  bindToggle('t-dims',on=>{ showDims=on; dimsGroup.visible=on; });
+  bindToggle('t-rider',on=>{ showRider=on; rebuild(); });
+  bindToggle('t-spin',on=>{ spin=on; });
+  $('view-side').addEventListener('click',()=>setView('side'));
+  $('view-iso').addEventListener('click',()=>setView('iso'));
+
+  // ---------------------------------------------------------------- loop
+  function resize(){
+    const w=canvas.clientWidth, h=canvas.clientHeight;
+    if(canvas.width!==w*devicePixelRatio||canvas.height!==h*devicePixelRatio){
+      renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+    }
+  }
+  function tick(){
+    resize();
+    if(spin) cam.tTheta -= 0.0035;
+    applyCam();
+    // breathing glow on the drag handles
+    const t = performance.now()*0.001;
+    for(const p of HANDLES){
+      const ring = p.userData.ring;
+      const hot = (hovered===p) || (active===p.userData.kind);
+      ring.material.opacity = hot ? 0.95 : 0.30 + 0.16*Math.sin(t*2.2);
+      ring.scale.setScalar(hot ? 1.18 : 1.0);
+    }
+    renderer.render(scene,camera);
+    requestAnimationFrame(tick);
+  }
+
+  // ---------------------------------------------------------------- init
+  let inited=false;
+  function init(){
+    if(inited) return; inited=true;
+    buildBike();                 // static frame/wheels/cranks (built once)
+    buildDims(); dimsGroup.visible = showDims;  // static fit dimensions (built once)
+    P.saddle = defaultSaddle();
+    syncSaddleUI(); syncStemUI();
+    rebuild();
+    setView('iso');
+    setTimeout(()=>$('loader').classList.add('hide'), 350);
+    setTimeout(dismissCoach, 7000);  // fade the coaching hint after a few seconds
+    tick();
+  }
+  // run once fonts are ready so sprite labels render crisply (with a fallback timer)
+  if(document.fonts && document.fonts.ready){ document.fonts.ready.then(init); setTimeout(init,900); }
+  else init();
+})();
+</script>
+</body>
+</html>

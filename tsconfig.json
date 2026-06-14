@@ -1,0 +1,8 @@
+{
+  "extends": "@dtf/config/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [],
+  "files": []
+}

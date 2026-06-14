@@ -1,0 +1,11 @@
+{
+  "name": "@dtf/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./tsconfig.json": "./tsconfig.json",
+    "./tailwind": "./tailwind.cjs"
+  },
+  "files": ["tsconfig.json", "tailwind.cjs"]
+}

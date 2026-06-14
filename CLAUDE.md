@@ -1,86 +1,60 @@
-# CLAUDE.md
+# CLAUDE.md — Digital Twin Bicycle Fit Platform
 
-Guidance for AI assistants (and humans) working in this repository.
+This file is read by Claude Code at the start of every session. Keep it short, current, and authoritative. When an architectural decision changes, update this file in the same PR.
 
-## Project overview
+## What we’re building
 
-**Ebike-3D-model-** is a repository for the 3D model of an e-bike (electric
-bicycle). It is intended to hold the 3D source files, exported meshes, and any
-supporting assets or tooling for the model.
+An embeddable, multi-tenant 3D bike-fit platform. A rider enters body measurements, sees a holographic human model posed on a real bicycle’s geometry, and directly manipulates components (saddle, stem, bars, cranks) to see fit/biomechanics update in real time. Licensed to brands, retailers, e-bike companies, and fit studios. See `docs/blueprint.md` for the full spec.
 
-> ⚠️ **Current state:** The repository is in its initial, near-empty state. At
-> the time of writing it contains only `README.md` (the project title) and this
-> `CLAUDE.md`. There is no source code, build system, asset pipeline, or test
-> suite yet. The conventions below describe how the project *should* be
-> organized as content is added — follow them when creating new files, and
-> update this document as the real structure solidifies.
+## Non-negotiable architecture principles
 
-## Repository layout
+1. **The fit engine is a pure, deterministic TypeScript package** (`packages/fit-core`). Same input → same output. It runs unchanged in the browser (interactive) AND on the server (authoritative reports). NEVER put fit math in React components, hooks, or SQL.
+1. **The LLM narrates; it never computes.** The deterministic engine produces all numbers, flags, and recommendations. The AI Coach only explains deltas in plain language. No fit value ever originates from an LLM.
+1. **Geometry is normalized at ingest** into one `CanonicalBike` type anchored at the bottom bracket (origin = BB, +x toward front wheel, +y up, metres). GLB/glTF/STEP/CAD/geometry-chart all converge to this. Renderer and engine never see vendor formats.
+1. **Render-agnostic engine output.** `solve()` returns a `FitState` that any renderer (R3F, or the 2D SVG fallback) can draw. Don’t couple the engine to Three.js.
 
-Current:
+## Monorepo layout (pnpm + Turborepo)
 
 ```
-.
-├── README.md     # Project title / top-level description
-└── CLAUDE.md     # This file — guidance for AI assistants
+apps/
+  widget/        # embeddable React+R3F fit experience (Web Component + iframe)
+  console/       # Next.js: Dealer Console + Brand Portal (role-gated)
+  api/           # NestJS: REST + GraphQL, modules per bounded context
+packages/
+  fit-core/      # ⭐ deterministic biomechanics engine (no deps on React/Three)
+  geometry/      # CanonicalBike types, ingest/normalization, validators
+  three-kit/     # R3F components: HologramRider, BikeModel, gizmos, holo shader
+  ui/            # shared design-system (Tailwind tokens, primitives)
+  sdk/           # @dtf/sdk — public TS client for tenants
+  db/            # Prisma schema + migrations + RLS policies
+  config/        # tsconfig, eslint, tailwind preset
 ```
 
-Recommended layout as the model grows (create directories as needed):
+## Tech stack (locked)
 
-```
-.
-├── src/          # Editable 3D source files (.blend, .f3d, CAD project files)
-├── models/       # Exported meshes for sharing/printing (.stl, .obj, .glb, .step)
-├── textures/     # Materials, texture maps, and image assets
-├── renders/      # Rendered images / preview screenshots
-├── docs/         # Design notes, measurements, references
-└── README.md
-```
-
-Keep large binary source files in `src/` and treat exported formats in
-`models/` as build artifacts derived from them.
+Frontend: React 18, TypeScript (strict), Three.js + React Three Fiber + drei, Zustand, Tailwind. Backend: NestJS, PostgreSQL + Prisma, Redis, BullMQ. Vectors: pgvector. Cloud: AWS (ECS Fargate, RDS, ElastiCache, S3+CloudFront). Auth: Cognito/Auth0 for users; short-lived signed JWT for widget embeds. Billing: Stripe.
 
 ## Conventions
 
-- **File naming:** lowercase with hyphens, descriptive and component-scoped —
-  e.g. `frame-main.stl`, `motor-hub-rear.step`, `battery-pack.blend`.
-- **One concern per file/component** where practical (frame, wheels, battery,
-  motor, etc.) so parts can be revised independently.
-- **Source vs. export:** Edit the source file (e.g. `.blend`, `.f3d`) and
-  re-export the derived mesh; never hand-edit an exported `.stl`/`.obj` if a
-  source exists.
-- **Units:** Standardize on millimeters (mm) for all CAD/printing work and note
-  the unit in `docs/` if a file deviates.
-- **Document the tool:** When adding a source file, note which application and
-  version produced it (Blender, Fusion 360, FreeCAD, etc.) in the commit
-  message or `docs/`, since binary formats are tool- and version-specific.
+- TypeScript strict everywhere; no `any` in `fit-core` or `geometry`.
+- `fit-core` is framework-free and 100% unit-tested with golden-value fixtures. A change to engine output MUST update fixtures in the same PR and explain the delta.
+- Units: SI internally (metres, radians). Convert to mm/degrees only at display boundaries.
+- Multi-tenant: every tenant-owned row carries `tenant_id`; enforce with Postgres RLS, not app-layer filtering alone.
+- Conventional Commits. Feature work behind flags. No fit math without a test.
 
-## Git workflow
+## Coordinate + biomechanics reference (so we stay consistent)
 
-- Default branch: `main`.
-- Active development branch for this work: `claude/claude-md-docs-2946pd`.
-- Make focused commits with clear, descriptive messages.
-- Do **not** open a pull request unless explicitly asked.
-- 3D assets are binary and large. If the project accumulates many or large
-  binaries, consider configuring [Git LFS](https://git-lfs.com/) and add a
-  `.gitattributes` tracking the relevant extensions (`*.blend`, `*.stl`,
-  `*.obj`, `*.glb`, `*.step`, `*.f3d`, image formats). Document this here once
-  adopted.
+- World: origin at BB, metres, sagittal plane is z≈0; rider faces +x.
+- Contact points solved in order: bottom bracket/pedal → saddle → grips.
+- Reported angles (degrees): knee extension (at knee, hip–knee–ankle), hip, back/torso-from-horizontal, shoulder, elbow. Quality bands live in `fit-core/src/windows.ts` — single source of truth, reused by HUD colors and AI Coach.
 
-## Build / test / run
+## Definition of done
 
-There is currently **no** build, test, or run tooling. There are no commands to
-execute. If an asset pipeline, validation, or rendering automation is added
-later (e.g. a Blender headless export script or a mesh-validation check),
-document the exact commands in this section.
+Typed, tested (engine: golden fixtures; UI: interaction tests), accessible (keyboard gizmo equivalents + ARIA live values), works at 380px width and on mobile at 60fps target, and behind a flag if user-facing.
 
-## Notes for AI assistants
+## Good first prompts for Claude Code
 
-- This is a **3D-model / asset** repository, not a software application. Don't
-  assume a package manager, framework, or test runner exists — verify before
-  referencing build commands.
-- Most meaningful content will be **binary 3D files** you cannot read or diff
-  directly. Rely on file names, sizes, `docs/`, and commit history to reason
-  about them; ask the user when a binary's contents matter.
-- Keep this file in sync with reality. When real structure, tooling, or
-  conventions land, update the relevant sections here in the same change.
+- “Scaffold the pnpm + Turborepo monorepo exactly as in CLAUDE.md, with empty typed package entry points and a passing CI lint/test pipeline.”
+- “In packages/geometry, implement the CanonicalBike type and a normalizer that ingests a geometry chart (stack, reach, HTA, STA, chainstay, etc.) into it, with validators and tests.”
+- “In packages/fit-core, port the IK + biomechanics solver from docs/prototype.html into a pure, tested module exposing solve(rider, bike, adjustments) -> FitState.”
+- “In packages/three-kit, rebuild the holographic rider and draggable gizmos from docs/prototype.html as R3F components driven by FitState.”
