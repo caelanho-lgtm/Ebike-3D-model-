@@ -1,0 +1,52 @@
+{
+  "name": "velofit-enterprise",
+  "version": "1.0.0",
+  "description": "Multi-tenant bicycle fitting, 3D visualization, and AI sizing platform for embedded commerce.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/caelanho-lgtm/Ebike-3D-model-.git"
+  },
+  "keywords": [
+    "bike-fit",
+    "saas",
+    "multi-tenant",
+    "3d",
+    "sizing"
+  ],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/caelanho-lgtm/Ebike-3D-model-/issues"
+  },
+  "homepage": "https://github.com/caelanho-lgtm/Ebike-3D-model-#readme",
+  "dependencies": {
+    "@react-three/fiber": "^9.6.1",
+    "clsx": "^2.1.1",
+    "next": "^16.2.9",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "three": "^0.184.0",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/three": "^0.184.1",
+    "eslint": "^10.5.0",
+    "eslint-config-next": "^16.2.9",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  }
+}
